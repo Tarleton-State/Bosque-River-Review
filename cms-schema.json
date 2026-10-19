@@ -1,0 +1,149 @@
+{
+  "sections": [
+    {
+      "name": "homepage",
+      "label": "Homepage",
+      "kind": "file",
+      "path": "content/site.json",
+      "fields": [
+        {
+          "label": "Publication name",
+          "name": "title",
+          "widget": "string"
+        },
+        {
+          "label": "University name",
+          "name": "university_name",
+          "widget": "string"
+        },
+        {
+          "label": "Search engine description",
+          "name": "description",
+          "widget": "text"
+        },
+        {
+          "label": "Publication logo",
+          "name": "logo",
+          "widget": "image",
+          "choose_url": false,
+          "multiple": false
+        },
+        {
+          "label": "Logo description",
+          "name": "logo_alt",
+          "widget": "string"
+        },
+        {
+          "label": "Welcome sentence",
+          "name": "welcome",
+          "widget": "string"
+        },
+        {
+          "label": "About the publication",
+          "name": "introduction",
+          "widget": "text",
+          "hint": "Write plain text. Separate paragraphs with a blank line."
+        },
+        {
+          "label": "Introduction photo",
+          "name": "hero",
+          "widget": "image",
+          "choose_url": false,
+          "multiple": false
+        },
+        {
+          "label": "Photo description",
+          "name": "hero_alt",
+          "widget": "string"
+        },
+        {
+          "label": "Issue list heading",
+          "name": "documents_heading",
+          "widget": "string"
+        },
+        {
+          "label": "Message when no issues are listed",
+          "name": "empty_message",
+          "widget": "string"
+        }
+      ]
+    },
+    {
+      "name": "notice",
+      "label": "Associated website notice",
+      "kind": "file",
+      "path": "content/notice.json",
+      "fields": [
+        {
+          "label": "Notice heading",
+          "name": "heading",
+          "widget": "string"
+        },
+        {
+          "label": "Notice text",
+          "name": "text",
+          "widget": "text",
+          "hint": "Use approved university wording."
+        }
+      ]
+    },
+    {
+      "name": "issues",
+      "label": "Journal issues",
+      "kind": "collection",
+      "path": "content/issues",
+      "fields": [
+        {
+          "label": "Issue title",
+          "name": "title",
+          "widget": "string"
+        },
+        {
+          "label": "Show on the website",
+          "name": "published",
+          "widget": "boolean",
+          "default": false,
+          "hint": "Turn on when ready to include this issue in the public list."
+        },
+        {
+          "label": "Display order",
+          "name": "order",
+          "widget": "number",
+          "value_type": "int",
+          "min": 1,
+          "step": 1,
+          "hint": "Lowest number is the current issue. Use a different positive whole number for each listed issue."
+        },
+        {
+          "label": "Issue PDF",
+          "name": "pdf",
+          "widget": "file",
+          "required": false,
+          "choose_url": false,
+          "multiple": false,
+          "media_folder": "/issues",
+          "public_folder": "/issues",
+          "accept": "application/pdf",
+          "hint": "Required before showing the issue on the website. Upload an accessible PDF."
+        },
+        {
+          "label": "Cover image (optional)",
+          "name": "cover",
+          "widget": "image",
+          "required": false,
+          "choose_url": false,
+          "multiple": false,
+          "media_folder": "/images",
+          "public_folder": "/images"
+        },
+        {
+          "label": "Cover description",
+          "name": "cover_alt",
+          "widget": "string",
+          "required": false,
+          "hint": "Required when selecting a cover. Describe the title and artwork."
+        }
+      ]
+    }
+  ]
+}

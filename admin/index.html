@@ -1,16 +1,25 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex,nofollow">
-  <meta name="referrer" content="no-referrer">
-  <title>Content editor</title>
-  <link rel="cms-config-url" type="text/yaml" href="./config.yml">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Publication editor</title>
+<link rel="stylesheet" href="./editor.css">
+<script src="./editor.js" defer></script>
 </head>
 <body>
-  <noscript>This content editor requires JavaScript. The public website does not.</noscript>
-  <!-- Pinned editor software is included in this repository. -->
-  <script src="./vendor/sveltia-cms.js"></script>
+<header><div class="brand"><img src="../images/Tarleton_TonTexas-white.svg" alt="Tarleton State University" width="55" height="50"><div><p>Tarleton Web Operations</p><h1>Publication editor</h1></div></div><a href="../">View website</a></header>
+<main>
+<section id="login-panel"><img class="publication-mark" src="../images/BRR-logo_180x64.jpg" alt="Bosque River Review" width="180" height="64"><h2>Sign in</h2><p>Use your NTNET account to update this publication.</p><button id="login" type="button" disabled>Sign in with NTNET</button><p class="login-note">Your university sign-in will open in a separate window.</p></section>
+<p id="status" role="status" aria-live="polite"></p>
+<section id="workspace" hidden>
+<div class="session"><span id="identity"></span><button id="logout" type="button">Sign out</button></div>
+<nav id="sections" aria-label="Content sections"></nav>
+<div id="collection" hidden><label for="issue-picker">Choose a journal issue</label><select id="issue-picker"></select><button id="new-issue" type="button">Add issue</button></div>
+<form id="editor"><h2 id="section-heading"></h2><div id="slug-row" hidden><label for="slug">Issue identifier</label><input id="slug" pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="volume-2"><small>Use a short name, such as volume-2. This is set only when creating an issue.</small></div><div id="fields"></div><button id="save" type="submit">Save changes</button><p>Saved changes publish after the website build finishes.</p></form>
+</section>
+</main>
 </body>
 </html>

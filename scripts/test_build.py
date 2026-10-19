@@ -26,7 +26,7 @@ class BuildTests(unittest.TestCase):
         self.original = build.ROOT
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name) / 'project'
-        shutil.copytree(self.original, self.root, ignore=shutil.ignore_patterns('_site', '__pycache__'))
+        shutil.copytree(self.original, self.root, ignore=shutil.ignore_patterns('_site', '__pycache__', 'node_modules', '.git'))
         build.ROOT = self.root
 
     def tearDown(self):
@@ -55,29 +55,21 @@ class BuildTests(unittest.TestCase):
         self.assertFalse((output / 'content').exists())
         self.assertFalse((output / '.pages.yml').exists())
         self.assertTrue((output / 'admin/index.html').is_file())
-        self.assertTrue((output / 'admin/config.yml').is_file())
+        self.assertTrue((output / 'admin/editor-config.json').is_file())
         self.assertFalse((output / 'admin/bootstrap.js').exists())
         self.assertFalse((output / 'docs').exists())
 
-    def test_template_uses_its_own_repository_and_no_external_auth(self):
+    def test_editor_configuration_and_server_exclusion(self):
         output = self.root / '_site'
-        with patch.dict('os.environ', {'GITHUB_REPOSITORY': 'Example/New-Site'}):
-            build.build(output)
-        config = (output / 'admin/config.yml').read_text()
-        self.assertIn('repo: "Example/New-Site"', config)
-        self.assertIn('auth_methods: [token]', config)
-        for old_setting in ('base_url:', 'auth_endpoint:', 'example.invalid'):
-            self.assertNotIn(old_setting, config)
+        build.build(output)
+        config = json.loads((output / 'admin/editor-config.json').read_text())
+        self.assertEqual(config['siteId'], 'bosque-river-review')
+        self.assertEqual(len(config['sections']), 3)
+        self.assertFalse((output / 'server').exists())
         html = (output / 'admin/index.html').read_text()
-        self.assertIn('src="./vendor/sveltia-cms.js"', html)
-        self.assertNotIn('https://', html)
-
-    def test_repository_name_rejects_config_injection(self):
-        for value in ('missing-owner', 'owner/repo/extra', 'owner/repo\nbase_url: bad'):
-            with self.subTest(value=value):
-                with patch.dict('os.environ', {'GITHUB_REPOSITORY': value}):
-                    with self.assertRaisesRegex(ValueError, 'GITHUB_REPOSITORY'):
-                        build.build(self.root / '_site')
+        self.assertIn('Sign in with NTNET', html)
+        self.assertNotIn('sveltia', html.lower())
+        self.assertNotIn('token', json.dumps(config).lower())
 
     def test_ordering_and_incomplete_draft(self):
         first = self.issue()

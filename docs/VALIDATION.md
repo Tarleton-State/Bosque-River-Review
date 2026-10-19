@@ -1,18 +1,29 @@
-# Validation
+# Validation record
 
-Verified locally on October 19, 2026:
-- Twelve automated checks pass: complete static output and local asset paths, automatic repository selection for template copies, token-only configuration, safe repository names, issue ordering, unlisted/incomplete entries, empty-list handling, optional covers, escaped text and paragraphs, missing media, duplicate orders, missing cover descriptions, npm package integrity, archive traversal, packaged dependencies, and missing editor distributions.
-- The included Sveltia 0.239.0 distribution was downloaded from the npm registry and verified against npm's published SHA-512 integrity.
-- The included editor and license pass the local per-file integrity manifest checks.
-- The site builds with no CMS server variables or external authentication service.
-- Browser check: the real bundled editor loads /admin/config.yml without configuration errors and displays Sign In Using Access Token. This caught and corrected the Decap-specific allow_multiple option during migration.
-- Browser check: the public page loads with its original publication content, descriptions, notice, and Volume 1 links.
-- Editor configuration fields match the existing homepage/notice JSON. Issue ordering is stored as an integer.
-- The GitHub Actions workflow and CMS YAML parse successfully.
-- The final source archive includes .github/workflows/pages.yml and the actual editor distribution, not just a CDN link.
+Validated locally against this package:
 
-Not performed:
-- A real GitHub token sign-in, repository save/upload, or GitHub Pages deployment. These require the editor's authorized account and repository setup.
-- A full accessibility audit of the CMS or publication PDF.
+- Seven Python tests covering public-page generation, local media, editor configuration, server exclusion, issue ordering, drafts, empty publications, optional covers, escaping, and invalid content.
+- Thirty PHP assertions covering authorization, normalization, content paths and field validation, one-time PKCE exchange, replay rejection, hashed sessions, site isolation, session expiry, and PHP syntax parsing.
+- Fourteen PHP endpoint checks covering login request validation, PKCE exchange, replay, authenticated session access, cross-site denial, CORS denial, preflight, and logout revocation, using a fixture identity helper.
+- JavaScript syntax check and a visual browser review of the branded login screen.
 
-Complete the first live edit-and-publish check after upload. A passing local build does not establish that organization token policies or branch protections permit editing.
+The PHP assertions ran in a PHP 8.4 WebAssembly runtime. They do not verify the production PHP extensions, server headers, actual LDAP bind, existing cookie issuer, GitHub writes, or a deployed Pages workflow. Follow the deployment guide’s live checklist before launch.
+
+To repeat locally with standard PHP installed:
+
+```sh
+python3 -m unittest discover -s scripts -p 'test_*.py'
+python3 scripts/build.py
+php server/tests/run.php
+```
+
+The GitHub Actions workflow runs the Python tests and build. It does not run the PHP service tests. The PHP code belongs on the university server and is excluded from the public artifact by the build.
+
+The optional HTTP endpoint harness uses Node.js and a development-only PHP WebAssembly runtime. It creates a disposable in-memory filesystem and a fixture identity helper; it makes no LDAP or GitHub requests. To repeat:
+
+```sh
+npm --prefix server/tests install --ignore-scripts
+npm --prefix server/tests test
+```
+
+These packages are for tests only and are not included in the website build or PHP deployment.
