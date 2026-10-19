@@ -78,5 +78,3 @@ a:focus-visible { outline: 3px solid var(--purple); outline-offset: 4px; }
 }
 
 .cover a { display: block; }
-.publication-library.without-cover { grid-template-columns: 1fr; }
-.document-list a > span { overflow-wrap: anywhere; }
