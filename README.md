@@ -1,70 +1,84 @@
-# Bosque River Review
+# Bosque River Review — GitHub Pages + Sveltia CMS
 
-A static publication library with browser-based editing through [Pages CMS](https://app.pagescms.org). The existing page design and Volume 1 content are retained.
+A publication website with its own visual editor at /admin/. Pages, content, PDFs, images, editor configuration, and deployment workflow live together in this repository. No university web-server connection, PHP application, LDAP gateway, or OAuth service is part of this setup.
 
-## One-time setup for the repository administrator
+## Start here
 
-1. Upload the contents of this folder into the root of the existing Tarleton-State/Bosque-River-Review repository on main. Do not create an extra Bosque-River-Review-main folder. Include .pages.yml and .github/workflows/pages.yml. Confirm both configuration files appear in GitHub after committing; using a local Git checkout is more reliable than a browser upload for hidden files.
-2. In GitHub, open Settings → Pages → Build and deployment → Source and choose GitHub Actions. Keep any existing custom domain configuration; retain a root CNAME file if you have one.
-3. Open Actions → Build and deploy website → Run workflow on main. Wait for build and deploy to succeed, then open the published site. Future commits to main trigger deployment automatically.
-4. Open [Pages CMS](https://app.pagescms.org), sign in with GitHub, and follow its GitHub App installation flow. A Tarleton-State organization administrator may need to approve it. Scope installation to only this repository.
-5. Select Tarleton-State / Bosque-River-Review and branch main. Confirm that Homepage, Journal issues, and Associated website notice appear.
-6. Give editors the intended repository/CMS access using your organization's access process. Do not share passwords or place tokens in website files.
-7. Make a small homepage edit in Pages CMS, save it, confirm the GitHub workflow succeeds, and verify the public site. This is the final end-to-end activation check.
+1. Upload this folder's CONTENTS into the root of Tarleton-State/Bosque-River-Review on main. Include the hidden .github folder. If upgrading an earlier package, remove .pages.yml, admin/bootstrap.js, and docs/SHARED_AUTH.md from GitHub if they remain; a browser upload does not delete old files.
+2. Open repository Settings → Pages. Under Build and deployment, choose GitHub Actions as Source. Retain existing custom domain settings and any CNAME file.
+3. Open Actions → Build and deploy website → Run workflow on main. Wait for both jobs to succeed.
+4. Open your published website with /admin/ appended. For the standard project address: https://tarleton-state.github.io/Bosque-River-Review/admin/. If you use a custom domain, use that site's /admin/ instead.
+5. Follow docs/EDITOR_SETUP.md to create your own repository-scoped GitHub token and sign in.
 
-The project is prepared locally. GitHub settings, organization app approval, editor sign-in, and the hosted CMS interface must be verified after upload. No external account connection is bundled into these files. The workflow assumes main is the publishing branch.
+The build detects the repository it runs in, so a new repository created from this template automatically points its deployed editor to that new repository.
 
-## Editor guide
+## What the editor can change
 
-### Change the homepage
+- Publication title, university name, search description, introduction, logo, and photo.
+- Journal issues with PDFs, covers, descriptions, and list ordering.
+- The associated website notice.
 
-Open Pages CMS, select the repository and main branch, and choose Homepage. Edit the labeled fields and select or upload images. Include useful image descriptions. The introduction uses plain text; add a blank line between paragraphs. Click Save. The site updates after the GitHub build and deployment finish.
+Editors work with labeled forms. The current layout stays controlled by templates and CSS. This is a structured content editor, not a drag-and-drop page builder.
 
-### Add an issue
+## How publishing works
 
-1. Choose Journal issues → Create.
-2. Enter a title such as Volume 2.
-3. Enter a unique positive whole number for Display order. Lower numbers appear first. The first published issue is labeled Current Issue, and its cover is featured.
-4. Select or upload the issue PDF. Optionally upload a cover and enter its description.
-5. Leave Show on the website off while preparing the entry. Save.
-6. To publish a new current issue, first change the previous current issue's order from 1 to 2 (and move other numbers as needed), then set the new issue to 1 and turn on Show on the website. Save.
-7. Wait for deployment and check both the list link and cover link.
+Sveltia commits content and media using the editor's GitHub access. Commits to main trigger GitHub Actions, which validates content, builds the public page, copies the included CMS release, and publishes _site to Pages.
 
-For a new archived issue, use a larger unused order number. To remove an issue from the list, switch off Show on the website and save. Do not delete PDFs or images still used by published entries.
+The lowest display-order number among listed issues is Current Issue and supplies the featured cover. Each listed issue needs a different positive whole-number order. An unlisted issue is excluded from the page but its uploaded media and repository data are not confidential.
 
-Drafts control listing visibility, not confidentiality. Repository files and uploaded media can remain publicly accessible. Only upload material suitable for public access. Uploading an accessible PDF remains the editor's responsibility.
+A failed build leaves the last successful deployment in place. Check Actions for a missing file, invalid order, or missing image description, correct it in the CMS, and save again.
 
-### Change the notice
+## Reuse as a template
 
-Choose Associated website notice, make the approved wording change, and save.
+After uploading this project, enable Settings → General → Template repository. For another publication:
+1. Choose Use this template → Create a new repository.
+2. Enable Actions if GitHub asks, then select GitHub Actions under Pages settings.
+3. Run the workflow on main.
+4. Give its editors repository access and have them configure personal tokens for that repository.
+5. Open /admin/ and replace the sample publication content and assets.
 
-### If a saved change does not appear
+The workflow assumes the publishing branch is main. For a different branch, update the workflow triggers and backend.branch in admin/config.yml. The publication layout and content model are reused; a different type of website may need different fields and templates.
 
-Open GitHub's Actions tab. If the build failed, read the Build and validate content error. Common causes are a missing PDF, missing cover description, deleted image, or duplicate display-order numbers. Correct the field and save again. A failed build does not replace the last successful deployment. If no workflow runs, confirm the edit was saved to main and Actions is enabled.
+## Self-contained runtime
 
-## Developer reference
+The editor software is INCLUDED in admin/vendor/ and served from GitHub Pages with the site. Builds verify its version and file hashes, then copy it into the public artifact. They do not fetch the CMS from a CDN or npm. The browser communicates with GitHub's API to read and save content.
 
-- .pages.yml: CMS fields, image library, PDF library.
-- content/site.json: homepage content.
-- content/notice.json: associated website wording.
-- content/issues/*.json: issue entries.
-- templates/index.html: page markup.
-- css/style.css: site design.
-- scripts/build.py: dependency-free Python 3.10+ static builder.
-- .github/workflows/pages.yml: pull-request validation and main deployment.
-- _site/: generated public website; ignored by Git.
+GitHub Actions itself still downloads its standard actions and Python runtime. There is no separate CMS server, university-hosted login service, or CMS vendor account to operate.
 
-Build locally:
+The upstream CMS is currently beta. This package pins version 0.239.0 in admin/sveltia-version.txt and includes the upstream license. To update deliberately, change that version, run the updater described below, test the editor, and commit the updated vendor files and manifest together.
 
+## Local development
+
+Python 3.10+ is required; no pip dependencies are needed.
+
+    python3 -m unittest discover -s scripts -p 'test_*.py'
     python3 scripts/build.py
+    python3 scripts/vendor_sveltia.py --check
     python3 -m http.server 8000 --directory _site
 
-Open http://localhost:8000. Generated asset links are relative and work under a GitHub project path such as /Bosque-River-Review/ as well as a custom domain.
+These commands build and verify the included files offline; the local static server is for browser preview. Visit http://localhost:8000 for the page, or /admin/ for the editor. Signing in with a token still writes to the configured remote repository even when the editor is opened locally.
 
-Only _site is deployed. It contains rendered HTML, styles, images, PDFs, and the favicon. Content JSON, templates, and CMS configuration are excluded from the artifact. Existing uploaded media is copied to preserve direct file URLs.
+For an intentional CMS version update only:
 
-The root index.html is an initial static snapshot for reference. Publishing builds from content and templates; do not edit the root index.html to change the website. The public page needs no content-fetch script, database, server login, or API token.
+    python3 scripts/vendor_sveltia.py --update
 
-The CMS uses structured forms rather than a drag-and-drop layout builder. Saves on main publish automatically; this setup does not add an editorial approval stage. Branch protection requiring pull requests needs an additional CMS workflow decision before direct editing on main can work.
+The updater downloads the pinned release from registry.npmjs.org, verifies its published SHA-512 integrity, retains the distribution and license, and records hashes for build-time checks. It needs HTTPS connectivity and a valid Python CA trust store; certificate verification stays enabled. Commit admin/sveltia-version.txt and admin/vendor/ after testing the upgrade.
 
-References: [Pages CMS quick start](https://pagescms.org/docs/quick-start/), [configuration](https://pagescms.org/docs/configuration/), and [GitHub Pages workflows](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).
+Set GITHUB_REPOSITORY=owner/repository when building locally for a different repository; otherwise the local build defaults to Tarleton-State/Bosque-River-Review. GitHub Actions supplies this variable automatically.
+
+## File map
+
+- admin/config.yml: visual editor fields, token sign-in, repository and branch.
+- admin/index.html: local editor shell.
+- admin/sveltia-version.txt: exact bundled CMS version.
+- content/: editable JSON and issue entries.
+- templates/index.html and css/style.css: presentation.
+- scripts/build.py: static page build and repository detection.
+- scripts/vendor_sveltia.py: offline integrity checks and optional release updater.
+- .github/workflows/pages.yml: validation, build, and deployment.
+- docs/EDITOR_SETUP.md: account, token, and publishing instructions.
+- docs/VALIDATION.md: verification performed and remaining live checks.
+
+Only _site is deployed. Private credentials never belong in the repository, workflow, or public output. Source JSON and guides are excluded from the Pages artifact, but remain visible if the repository is public. Existing media is copied to preserve direct URLs. Root index.html is a reference snapshot; edit content through the CMS or source JSON and rebuild.
+
+Reference: https://sveltiacms.app/en/docs/backends/github

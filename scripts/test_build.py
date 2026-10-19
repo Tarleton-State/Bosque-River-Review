@@ -7,6 +7,7 @@ import unittest
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote
+from unittest.mock import patch
 
 import build
 
@@ -53,6 +54,30 @@ class BuildTests(unittest.TestCase):
                 self.assertTrue((output / unquote(url)).is_file(), url)
         self.assertFalse((output / 'content').exists())
         self.assertFalse((output / '.pages.yml').exists())
+        self.assertTrue((output / 'admin/index.html').is_file())
+        self.assertTrue((output / 'admin/config.yml').is_file())
+        self.assertFalse((output / 'admin/bootstrap.js').exists())
+        self.assertFalse((output / 'docs').exists())
+
+    def test_template_uses_its_own_repository_and_no_external_auth(self):
+        output = self.root / '_site'
+        with patch.dict('os.environ', {'GITHUB_REPOSITORY': 'Example/New-Site'}):
+            build.build(output)
+        config = (output / 'admin/config.yml').read_text()
+        self.assertIn('repo: "Example/New-Site"', config)
+        self.assertIn('auth_methods: [token]', config)
+        for old_setting in ('base_url:', 'auth_endpoint:', 'example.invalid'):
+            self.assertNotIn(old_setting, config)
+        html = (output / 'admin/index.html').read_text()
+        self.assertIn('src="./vendor/sveltia-cms.js"', html)
+        self.assertNotIn('https://', html)
+
+    def test_repository_name_rejects_config_injection(self):
+        for value in ('missing-owner', 'owner/repo/extra', 'owner/repo\nbase_url: bad'):
+            with self.subTest(value=value):
+                with patch.dict('os.environ', {'GITHUB_REPOSITORY': value}):
+                    with self.assertRaisesRegex(ValueError, 'GITHUB_REPOSITORY'):
+                        build.build(self.root / '_site')
 
     def test_ordering_and_incomplete_draft(self):
         first = self.issue()
