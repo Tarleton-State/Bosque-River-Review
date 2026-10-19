@@ -3,11 +3,14 @@
 
 import argparse
 import json
+import os
+import re
 import shutil
 from html import escape
 from pathlib import Path
 from string import Template
 from urllib.parse import quote, unquote, urlsplit
+from vendor_sveltia import verify
 
 ROOT = Path(__file__).resolve().parents[1]
 IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg', '.avif'}
@@ -118,18 +121,25 @@ def render():
 def build(output):
     output = output.resolve()
     # Refuse source folders, their parents and their descendants as output targets.
-    protected = [ROOT / name for name in ('content', 'templates', 'scripts', 'images', 'issues', 'css', 'js', '.github')]
+    protected = [ROOT / name for name in ('content', 'templates', 'scripts', 'images', 'issues', 'css', 'js', 'admin', '.github', 'docs')]
     if output == ROOT or ROOT.is_relative_to(output) or any(
         output.is_relative_to(path) or path.is_relative_to(output) for path in protected
     ):
         raise ValueError('Output must be a separate build directory, such as _site')
     html = render()  # Validate before touching the previous output.
+    verify(ROOT / 'admin/vendor', (ROOT / 'admin/sveltia-version.txt').read_text().strip())
+    repo = os.environ.get('GITHUB_REPOSITORY', '').strip() or 'Tarleton-State/Bosque-River-Review'
+    if not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', repo):
+        raise ValueError('GITHUB_REPOSITORY must have the form owner/repository')
     output.mkdir(parents=True, exist_ok=True)
-    for name in ('css', 'images', 'issues'):
+    for name in ('css', 'images', 'issues', 'admin'):
         target = output / name
         if target.exists():
             shutil.rmtree(target)
         shutil.copytree(ROOT / name, target)
+    config = (ROOT / 'admin/config.yml').read_text(encoding='utf-8')
+    config = re.sub(r'(?m)^  repo:.*$', '  repo: ' + json.dumps(repo), config)
+    (output / 'admin/config.yml').write_text(config, encoding='utf-8')
     shutil.copy2(ROOT / 'favicon.svg', output / 'favicon.svg')
     # Only generated public files are deployed; CMS drafts and source stay out.
     (output / 'index.html').write_text(html, encoding='utf-8')
