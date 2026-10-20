@@ -1,0 +1,138 @@
+# Editor forms for https://app.pagescms.org
+media:
+  - name: images
+    label: Images and covers
+    input: images
+    output: /images
+    extensions: [jpg, jpeg, png, webp, gif, svg, avif]
+    rename: safe
+  - name: issues
+    label: Issue PDFs
+    input: issues
+    output: /issues
+    extensions: [pdf]
+    rename: safe
+
+content:
+  - name: homepage
+    label: Homepage
+    type: file
+    path: content/site.json
+    format: json
+    fields:
+      - name: title
+        label: Publication name
+        type: string
+        required: true
+      - name: university_name
+        label: University name
+        type: string
+        required: true
+      - name: description
+        label: Search engine description
+        type: text
+        required: true
+      - name: logo
+        label: Publication logo
+        type: image
+        required: true
+        options:
+          media: images
+      - name: logo_alt
+        label: Logo description
+        type: string
+        required: true
+      - name: welcome
+        label: Welcome sentence
+        type: string
+        required: true
+      - name: introduction
+        label: About the publication
+        type: text
+        required: true
+        description: Write plain text. Separate paragraphs with a blank line.
+      - name: hero
+        label: Introduction photo
+        type: image
+        required: true
+        options:
+          media: images
+      - name: hero_alt
+        label: Photo description
+        type: string
+        required: true
+        description: Describe the photo for people who cannot see it.
+      - name: documents_heading
+        label: Issue list heading
+        type: string
+        required: true
+      - name: empty_message
+        label: Message when no issues are published
+        type: string
+        required: true
+
+  - name: issues
+    label: Journal issues
+    type: collection
+    path: content/issues
+    format: json
+    subfolders: false
+    filename:
+      template: '{primary}.json'
+      field: create
+    operations:
+      delete: false
+      rename: false
+    view:
+      primary: title
+      fields: [title, order, published]
+      sort: order
+      order: asc
+    fields:
+      - name: title
+        label: Issue title
+        type: string
+        required: true
+        description: 'For example: Volume 2 or Spring 2027.'
+      - name: published
+        label: Show on the website
+        type: boolean
+        description: Turn on when ready. Saving a published issue updates the live site after the build finishes.
+      - name: order
+        label: Display order
+        type: number
+        required: true
+        description: Lowest number is the current issue. Use a different positive whole number for each published issue.
+      - name: pdf
+        label: Issue PDF
+        type: file
+        options:
+          media: issues
+          extensions: [pdf]
+        description: Required before turning on Show on the website. Upload an accessible PDF.
+      - name: cover
+        label: Cover image (optional)
+        type: image
+        options:
+          media: images
+        description: The current issue's cover appears beside the list.
+      - name: cover_alt
+        label: Cover description
+        type: string
+        description: Required when you select a cover. Describe the title and artwork.
+
+  - name: notice
+    label: Associated website notice
+    type: file
+    path: content/notice.json
+    format: json
+    fields:
+      - name: heading
+        label: Notice heading
+        type: string
+        required: true
+      - name: text
+        label: Notice text
+        type: text
+        required: true
+        description: Use approved university wording.
