@@ -38,9 +38,9 @@ main { padding-block: 32px 64px; }
 h2 { margin: 0 0 10px; color: var(--purple); font-size: 1.5rem; font-weight: 500; line-height: 1.3; }
 p { margin: 0 0 16px; }
 .welcome { margin-bottom: 12px; }
-.site-notice { margin-top: 24px; padding: 18px 22px; background: #f8f7fb; border-left: 3px solid var(--lavender); }
-.site-notice h2 { margin-bottom: 8px; color: #40364d; font-size: .875rem; font-weight: 700; letter-spacing: .035em; text-transform: uppercase; }
-.site-notice p { margin: 0; color: #525057; font-size: .875rem; line-height: 1.65; }
+.site-notice { margin-top: 35px; padding: 18px 22px; background: #f8f7fb; border-left: 3px solid var(--lavender); }
+.site-notice h2 { margin-bottom: 8px; color: #40364d; font-size: .775rem; font-weight: 700; letter-spacing: .035em; text-transform: uppercase; }
+.site-notice p { margin: 0; color: #525057; font-size: .775rem; line-height: 1.65; }
 .publication-library { display: grid; grid-template-columns: minmax(220px, 340px) minmax(0, 1fr); align-items: start; gap: clamp(32px, 7vw, 90px); margin-top: 36px; }
 .cover { margin: 0; padding: 12px; border: 1px solid #dedbe4; background: var(--white); }
 .cover img { display: block; width: 100%; height: auto; }
