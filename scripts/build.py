@@ -48,6 +48,12 @@ def load(path):
 
 def render():
     site = load(ROOT / 'content/site.json')
+
+    # Use the university-managed publication and university names.
+    branding = load(ROOT / 'config/branding.json')
+    for key in ('title', 'university_name'):
+        site[key] = text(branding, key)
+    
     values = {key: escape(text(site, key)) for key in (
         'title', 'university_name', 'description', 'logo_alt',
         'welcome', 'hero_alt', 'documents_heading', 'empty_message',
