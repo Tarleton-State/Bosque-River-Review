@@ -79,7 +79,9 @@ class BuildTests(unittest.TestCase):
 
     def test_plain_text_is_escaped_and_paragraphs_render(self):
         data = json.loads((self.root / 'content/site.json').read_text())
-        data['title'] = '<script>alert(1)</script>'
+        branding = json.loads((self.root / 'config/branding.json').read_text())
+        branding['title'] = '<script>alert(1)</script>'
+        self.save('config/branding.json', branding)
         data['introduction'] = 'A & B\n\nSecond paragraph'
         self.save('content/site.json', data)
         html = build.render()
