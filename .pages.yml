@@ -20,14 +20,6 @@ content:
     path: content/site.json
     format: json
     fields:
-      - name: title
-        label: Publication name
-        type: string
-        required: true
-      - name: university_name
-        label: University name
-        type: string
-        required: true
       - name: description
         label: Search engine description
         type: text
@@ -120,19 +112,3 @@ content:
         label: Cover description
         type: string
         description: Required when you select a cover. Describe the title and artwork.
-
-  - name: notice
-    label: Associated website notice
-    type: file
-    path: content/notice.json
-    format: json
-    fields:
-      - name: heading
-        label: Notice heading
-        type: string
-        required: true
-      - name: text
-        label: Notice text
-        type: text
-        required: true
-        description: Use approved university wording.
