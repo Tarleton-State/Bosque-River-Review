@@ -19,6 +19,10 @@ content:
     type: file
     path: content/site.json
     format: json
+    operations:
+      create: false
+      rename: false
+      delete: false
     fields:
       - name: description
         label: Search engine description
@@ -34,26 +38,25 @@ content:
         label: Logo description
         type: string
         required: true
-      - name: welcome
-        label: Welcome sentence
-        type: string
-        required: true
       - name: introduction
         label: About the publication
-        type: text
+        type: rich-text
         required: true
-        description: Write plain text. Separate paragraphs with a blank line.
+        description: Use paragraphs, headings, lists, and links. This includes any welcome message.
+        options:
+          format: html
+          switcher: false
+          media: false
       - name: hero
-        label: Introduction photo
+        label: Introduction photo (optional)
         type: image
-        required: true
+        description: Leave empty for a full-width introduction.
         options:
           media: images
       - name: hero_alt
         label: Photo description
         type: string
-        required: true
-        description: Describe the photo for people who cannot see it.
+        description: Required when a photo is selected. Describe it for people who cannot see it.
       - name: documents_heading
         label: Issue list heading
         type: string
@@ -112,3 +115,46 @@ content:
         label: Cover description
         type: string
         description: Required when you select a cover. Describe the title and artwork.
+
+
+  - name: branding
+    label: Site identity (read only)
+    type: file
+    path: config/branding.json
+    format: json
+    operations:
+      create: false
+      rename: false
+      delete: false
+    fields:
+      - name: title
+        label: Publication name
+        type: string
+        readonly: true
+        description: Appears in the site header and browser title. Managed by Web Operations.
+      - name: university_name
+        label: University name
+        type: string
+        readonly: true
+        description: Appears above the publication name. Managed by Web Operations.
+
+  - name: notice
+    label: Associated site notice (read only)
+    type: file
+    path: content/notice.json
+    format: json
+    operations:
+      create: false
+      rename: false
+      delete: false
+    fields:
+      - name: heading
+        label: Notice heading
+        type: string
+        readonly: true
+        description: Appears near the bottom of the website. Managed by Web Operations.
+      - name: text
+        label: Disclaimer text
+        type: text
+        readonly: true
+        description: This is the disclaimer displayed on the website. Contact Web Operations for changes.
