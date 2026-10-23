@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Build a complete static site using Python 3.10+ and no third-party packages."""
+"""Build the static site using Python 3.10+ and requirements.txt."""
 
 import argparse
 import json
 import shutil
-from html import escape
+
+import nh3
+from html import escape, unescape
 from pathlib import Path
 from string import Template
 from urllib.parse import quote, unquote, urlsplit
@@ -46,6 +48,24 @@ def load(path):
     return data
 
 
+def rich_text(value):
+    """Keep editorial formatting; strip embeds, scripts, styles and unsafe links."""
+    cleaned = nh3.clean(
+        value,
+        tags={'p', 'br', 'strong', 'b', 'em', 'i', 'u', 's', 'del',
+              'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li',
+              'blockquote', 'a', 'code', 'pre', 'hr', 'sub', 'sup'},
+        attributes={'a': {'href', 'title'}},
+        clean_content_tags={'script', 'style', 'iframe', 'object', 'svg', 'math'},
+        url_schemes={'http', 'https', 'mailto', 'tel'},
+    )
+    # Do not publish an empty editor document or content removed by sanitization.
+    visible = unescape(nh3.clean(cleaned, tags=set(), attributes={}))
+    if not visible.strip():
+        raise ValueError('introduction: enter some text')
+    return cleaned
+
+
 def render():
     site = load(ROOT / 'content/site.json')
 
@@ -56,15 +76,18 @@ def render():
     
     values = {key: escape(text(site, key)) for key in (
         'title', 'university_name', 'description', 'logo_alt',
-        'welcome', 'hero_alt', 'documents_heading', 'empty_message',
+        'documents_heading', 'empty_message',
     )}
     values['logo'] = asset(site.get('logo'), 'images', IMAGE_EXTENSIONS)
-    values['hero'] = asset(site.get('hero'), 'images', IMAGE_EXTENSIONS)
-    values['introduction'] = '\n'.join(
-        f'<p>{escape(paragraph.strip()).replace(chr(10), "<br>")}</p>'
-        for paragraph in text(site, 'introduction').replace('\r\n', '\n').split('\n\n')
-        if paragraph.strip()
+    values['hero_image'] = ''
+    if site.get('hero'):
+        hero = asset(site['hero'], 'images', IMAGE_EXTENSIONS)
+        hero_alt = escape(text(site, 'hero_alt'))
+        values['hero_image'] = f'<img class="river-image" src="{hero}" alt="{hero_alt}">'
+    values['introduction_class'] = 'introduction' + (
+        '' if values['hero_image'] else ' without-photo'
     )
+    values['introduction'] = rich_text(text(site, 'introduction'))
     notice = load(ROOT / 'content/notice.json')
     values['notice_heading'] = escape(text(notice, 'heading'))
     values['notice_text'] = escape(text(notice, 'text'))
@@ -124,8 +147,8 @@ def render():
 def build(output):
     output = output.resolve()
     # Refuse source folders, their parents and their descendants as output targets.
-    protected = [ROOT / name for name in ('content', 'templates', 'scripts', 'images', 'issues', 'css', 'js', '.github')]
-    if output == ROOT or ROOT.is_relative_to(output) or any(
+    protected = [(ROOT / name).resolve() for name in ('config', 'content', 'templates', 'scripts', 'images', 'issues', 'css', 'js', '.github')]
+    if output == ROOT.resolve() or ROOT.resolve().is_relative_to(output) or any(
         output.is_relative_to(path) or path.is_relative_to(output) for path in protected
     ):
         raise ValueError('Output must be a separate build directory, such as _site')

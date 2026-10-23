@@ -77,12 +77,12 @@ class BuildTests(unittest.TestCase):
         self.assertIn('New issues will be listed', html)
         self.assertNotIn('<figure', html)
 
-    def test_plain_text_is_escaped_and_paragraphs_render(self):
+    def test_identity_is_escaped_and_rich_text_paragraphs_render(self):
         data = json.loads((self.root / 'content/site.json').read_text())
         branding = json.loads((self.root / 'config/branding.json').read_text())
         branding['title'] = '<script>alert(1)</script>'
         self.save('config/branding.json', branding)
-        data['introduction'] = 'A & B\n\nSecond paragraph'
+        data['introduction'] = '<p>A &amp; B</p><p>Second paragraph</p>'
         self.save('content/site.json', data)
         html = build.render()
         self.assertNotIn('<script>', html)
@@ -110,6 +110,83 @@ class BuildTests(unittest.TestCase):
         self.save('content/issues/volume-1.json', issue)
         with self.assertRaisesRegex(ValueError, 'cover_alt'):
             build.render()
+
+    def test_optional_photo_and_conditional_description(self):
+        data = json.loads((self.root / 'content/site.json').read_text())
+        for missing in ('', None):
+            data['hero'] = missing
+            data.pop('hero_alt', None)
+            self.save('content/site.json', data)
+            html = build.render()
+            self.assertIn('class="introduction without-photo"', html)
+            self.assertNotIn('class="river-image"', html)
+        data.pop('hero')
+        self.save('content/site.json', data)
+        self.assertIn('without-photo', build.render())
+        data['hero'] = '/images/BRR-logo_180x64.jpg'
+        self.save('content/site.json', data)
+        with self.assertRaisesRegex(ValueError, 'hero_alt'):
+            build.render()
+        data['hero_alt'] = 'Description with "quotes" & symbols'
+        self.save('content/site.json', data)
+        html = build.render()
+        self.assertIn('class="introduction"', html)
+        self.assertIn('alt="Description with &quot;quotes&quot; &amp; symbols"', html)
+
+    def test_rich_text_formatting_and_safe_links(self):
+        content = ('<h2>About us</h2><p><strong>Bold</strong> and <em>italic</em></p>'
+                   '<ul><li>One</li></ul><ol><li>Two</li></ol><blockquote>Quote</blockquote>'
+                   '<a href="https://example.edu/about?x=1&amp;y=2">Website</a>'
+                   '<a href="mailto:editor@example.edu">Email</a>')
+        html = build.rich_text(content)
+        for fragment in ('<h2>About us</h2>', '<strong>Bold</strong>', '<em>italic</em>',
+                         '<ul><li>One</li></ul>', '<blockquote>Quote</blockquote>',
+                         'href="https://example.edu/about?x=1&amp;y=2"',
+                         'href="mailto:editor@example.edu"'):
+            self.assertIn(fragment, html)
+
+    def test_rich_text_removes_active_content_and_unsafe_links(self):
+        payloads = [
+            '<script>alert(1)</script>',
+            '<iframe src="https://example.com">embed</iframe>',
+            '<svg><a xlink:href="javascript:alert(1)">bad</a></svg>',
+            '<img src=x onerror="alert(1)">',
+            '<style>body {display:none}</style>',
+            '<a href="javascript:alert(1)" onclick="alert(2)">link</a>',
+            '<a href="jav&#x61;script:alert(1)">link</a>',
+            '<a href="data:text/html,bad">link</a>',
+            '<p style="position:fixed" id="main-content">text</p>',
+        ]
+        for payload in payloads:
+            with self.subTest(payload=payload):
+                html = build.rich_text('<p>Keep this</p>' + payload)
+                self.assertIn('<p>Keep this</p>', html)
+                for forbidden in ('<script', '<iframe', '<svg', '<img', '<style',
+                                  'javascript:', 'data:', 'onclick=', 'onerror=',
+                                  'style=', 'id='):
+                    self.assertNotIn(forbidden, html)
+        for empty in ('<p></p>', '<p><br></p>', '<p>&nbsp;</p>',
+                      '<p>&#160;</p>', '<script>alert(1)</script>'):
+            with self.assertRaisesRegex(ValueError, 'introduction'):
+                build.rich_text(empty)
+
+    def test_single_source_identity_and_combined_introduction(self):
+        data = json.loads((self.root / 'content/site.json').read_text())
+        branding = json.loads((self.root / 'config/branding.json').read_text())
+        self.assertNotIn('welcome', data)
+        self.assertNotIn('title', data)
+        self.assertNotIn('university_name', data)
+        html = build.render()
+        self.assertIn(branding['title'], html)
+        self.assertEqual(html.count('You have reached the online library for this publication.'), 1)
+        data['title'] = 'Unauthorized replacement'
+        data['university_name'] = 'Unauthorized university'
+        self.save('content/site.json', data)
+        self.assertNotIn('Unauthorized', build.render())
+
+    def test_branding_directory_is_protected_from_build_output(self):
+        with self.assertRaisesRegex(ValueError, 'separate build directory'):
+            build.build(self.root / 'config')
 
 
 if __name__ == '__main__':

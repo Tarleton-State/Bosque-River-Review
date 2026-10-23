@@ -1,0 +1,2 @@
+# Build-time HTML sanitization; the deployed site remains entirely static.
+nh3==0.3.7
